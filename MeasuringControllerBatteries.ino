@@ -1,73 +1,38 @@
 #include <avr/sleep.h>
-#include <GSM.h>
 //TODO: Read from A0 the voltage of the battery(0 - 20.48V)
 
-#define GSM_PIN 5
-#define GPRS_APN ""
-#define GPRS_LOGIN ""
-#define GPRS_PASSWORD ""
-
-GSMClient client;
-GPRS gprs;
-GSM gsmAccess;
- 
+#define DEVICE_INDEX 0
+SoftwareSerial dataSerial(2, 3);
 int wakePin = 2;
 int sleepStatus = 0;
-const char server[] = "arduino.cc"; // Example
-const char path[] = "/data";
-int port = 3000;
+
+double getVoltage() {
+  // TODO: Implement
+}
+
+double getAmpers() {
+  //TODO: Implement
+}
 
 void wakeUpNow()
 {
-  // Check each battery
-  String data = "";
-
-  // Send data
-  sendData(data);
-}
-
-void sendData(const String data) {
-  boolean notConnected = true;
-
-  while(notConnected)
-  {
-    if((gsmAccess.begin("5") == GSM_READY) &
-        (gprs.attachGPRS(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD) == GPRS_READY))
-      notConnected = false;
-    else
-    {
-      Serial.println("Not connected");
-      delay(1000);
-    }
+  String res = "no response";
+  
+  int byteRead = Serial.readString();
+  if(byteRead == DEVICE_INDEX) {
+    res = "voltage" + String(getVoltage());
+    res += "ampers" + String(getAmpers());
   }
 
-  Serial.println("connecting...");
-
-  if (client.connect(server, port))
-  {
-    Serial.println("connected");
-    
-    // Make a HTTP request:
-    client.print("POST ");
-    client.print(path);
-    client.print(" HTTP/1.1\nContent-Type: application/json\nContent-Length: ");
-    client.print(String(data.length()));
-    client.print("\nHost: ");
-    client.print(server);
-    client.print("\n\n");
-    client.println(data);
-    client.println();
-  } 
-  else
-  {
-    Serial.println("connection failed");
-  }
+  dataSerial.write(res);
+  sleep(100);
+SoftwareSerial dataSerial(2, 3);
 }
- 
+
 void setup()
 {
   pinMode(wakePin, INPUT);
-  Serial.begin(9600);
+  dataSerial.begin(9600);
   attachInterrupt(0, wakeUpNow, CHANGE);
 }
  
@@ -84,12 +49,7 @@ void sleepNow()
  
 void loop()
 {
-  if (Serial.available()) {
-    Serial.write(Serial.read());
-  }
-  
-  delay(1000);
-  Serial.println("Timer: Entering Sleep mode");
+  Serial.println("Entering Sleep mode");
   delay(100);
   sleepNow();
 }
