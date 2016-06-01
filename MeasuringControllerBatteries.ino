@@ -35,8 +35,9 @@ void wakeUpNow()
   
   int byteRead = Serial.readString();
   if(byteRead == DEVICE_INDEX) {
-    res = "voltage" + String(getVoltage());
-    res += "ampers" + String(getAmpers());
+    res = "voltage=" + String(getVoltage());
+    res += "&ampers=" + String(getAmpers());
+    res += "&battery_id=" + String(CURRENT_ENABLE_PIN);
   }
 
   dataSerial.write(res);
