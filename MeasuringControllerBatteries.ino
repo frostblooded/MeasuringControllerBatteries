@@ -42,7 +42,6 @@ void wakeUpNow()
 
   dataSerial.write(res);
   sleep(100);
-SoftwareSerial dataSerial(2, 3);
 }
 
 void setup()
