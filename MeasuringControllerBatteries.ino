@@ -20,7 +20,7 @@ double getVoltage() {
 }
 
 // Function that checks battery current and returns it
-double getAmpers() {
+double getCurrent() {
   digitalWrite(CURRENT_ENABLE_PIN, HIGH);
   delay(50);
   double current = (double)analogRead(CURRENT_PIN)/1023.0;
@@ -32,19 +32,33 @@ double getAmpers() {
   return current;
 }
 
+#define PACKET_SIZE 1+2*sizeof(float)+2
+char measuring_data[PACKET_SIZE+1];
+
+char* getDataString() {
+  measuring_data[0] = (char)DEVICE_INDEX;
+  float voltage = getVoltage();
+  float current = getCurrent();
+  *((float*)&measuring_data[1]) = voltage;
+  *((float*)&measuring_data[1+sizeof(float)]) = current;
+  measuring_data[PACKET_SIZE-2] = 0;
+  measuring_data[PACKET_SIZE-1] = 0;
+  for(int i=0; i<PACKET_SIZE; i++) {
+    measuring_data[PACKET_SIZE-1] += measuring_data[i];
+  }
+  measuring_data[PACKET_SIZE] = 0;
+  return measuring_data;
+}
+
 // Function, which gets executed when Arduino wakes up
 void wakeUpNow()
 {
-  String res = "no response";
-  
   String byteRead = mySerial.readString();
 
   // If main controller is calling this controller
   // to get its data
   if(byteRead == String(DEVICE_INDEX)) {
-    res = "voltage=" + String(getVoltage());
-    res += "&ampers=" + String(getAmpers());
-    res += "&battery_id=" + String(CURRENT_ENABLE_PIN);
+    String res = getDataString();
     mySerial.print(res);
     delay(100);
   }
