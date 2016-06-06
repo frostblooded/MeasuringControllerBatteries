@@ -1,10 +1,12 @@
 #include <avr/sleep.h>
+#include <SoftwareSerial.h>
 
 #define VOLTAGE_PIN 0
 #define CURRENT_PIN 1
 #define CURRENT_ENABLE_PIN 19
-
 #define DEVICE_INDEX 0
+
+SoftwareSerial mySerial(2, 3);
 int wakePin = 2;
 int sleepStatus = 0;
 
@@ -22,7 +24,7 @@ double getAmpers() {
   current *= 2.0;
   current -= 1.0;
   current *= 51.1;
-  analogRead(CURRENT_PIN)
+  analogRead(CURRENT_PIN);
   digitalWrite(CURRENT_ENABLE_PIN, LOW);
   return current;
 }
@@ -31,22 +33,21 @@ void wakeUpNow()
 {
   String res = "no response";
   
-  int byteRead = Serial.readString();
-  if(byteRead == DEVICE_INDEX) {
+  String byteRead = mySerial.readString();
+  if(byteRead == String(DEVICE_INDEX)) {
     res = "voltage=" + String(getVoltage());
     res += "&ampers=" + String(getAmpers());
     res += "&battery_id=" + String(CURRENT_ENABLE_PIN);
+    mySerial.print(res);
+    delay(100);
   }
-
-  Serial.write(res);
-  sleep(100);
 }
 
 void setup()
 {
   pinMode(CURRENT_ENABLE_PIN, OUTPUT);
   pinMode(wakePin, INPUT);
-  Serial.begin(9600);
+  mySerial.begin(9600);
   attachInterrupt(0, wakeUpNow, CHANGE);
 }
  
@@ -63,7 +64,6 @@ void sleepNow()
  
 void loop()
 {
-  Serial.println("Entering Sleep mode");
   delay(100);
   sleepNow();
 }
